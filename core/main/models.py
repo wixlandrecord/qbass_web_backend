@@ -1,15 +1,17 @@
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 import os
 
 
 def content_file_name_artist(instance, filename):
     ext = filename.split('.')[-1]
-    filename = "%s_thumbnail.%s" % (instance.name, ext)
+    filename = f'{instance.name}_thumbnail.{ext}'
     return os.path.join('artist_thumbnail/', filename)
 
 def content_file_name_artist_logo(instance, filename):
     ext = filename.split('.')[-1]
-    filename = "%s_logo.%s" % (instance.name, ext)
+    filename = f'{instance.name}_logo.{ext}'
     return os.path.join('artist_logo/', filename)
 
 
@@ -28,3 +30,8 @@ class Artist(models.Model):
 
     def __str__(self):
         return self.name
+
+@receiver(post_delete, sender=Artist)
+def submission_delete(sender, instance, **kwargs):
+    instance.thumbnail.delete(False)
+    instance.logo.delete(False)

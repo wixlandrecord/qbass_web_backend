@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from .models import Artist
+import os
 
 
 TEXT_SAMPLE_LONG_TEXT = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi ornare malesuada
@@ -31,9 +32,13 @@ Donec vel convallis nisl. Morbi magna augue, volutpat nec vehicula vel, auctor a
 """
 
 class TestArtistModel(TestCase):
+    """Test Artist Model"""
 
-    def setUp(self):
-        Artist.objects.create(
+
+    def test_creating_instance(self):
+        """Test creating valid and invalid instance"""
+        artist1 = Artist.objects.create(
+            id=1,
             name = 'Chilli Crew',
             desription = TEXT_SAMPLE_LONG_TEXT,
             year = 2018,
@@ -47,7 +52,8 @@ class TestArtistModel(TestCase):
             phone = '+48777888999'
         )
 
-        Artist.objects.create(
+        artist2 = Artist.objects.create(
+            id=2,
             name = 'Pikes',
             desription = TEXT_SAMPLE_LONG_TEXT,
             year = 2017,
@@ -60,29 +66,25 @@ class TestArtistModel(TestCase):
             mail = 'office@pikes.com',
             phone = '+48777888999'
         )
-
-    def test_creating_instance(self):
-        """Test creating valid and invalid instance"""
-        artist1 = Artist.objects.get(id=1)
-        artist2 = Artist.objects.get(id=2)
         artist3 = {}
         artists = Artist.objects.all()
 
-        self.assertIn(artist1, artists)
-        self.assertIn(artist2, artists)
-        self.assertNotIn(artist3, artists)
-        self.assertEqual(len(artists), 2)
-
-    def test_validate_fields(self):
-        """Test valid data in instance, and test string representacion"""
-        artist1 = Artist.objects.get(id=3)
-        artist2 = Artist.objects.get(id=4)
-
-        self.assertEqual(artist1.name, 'Chilli Crew')
-        self.assertEqual(artist2.name, 'Pikes')
-        self.assertEqual(artist1.year, 2018) #int
-        self.assertEqual(artist2.year, 2017) #int
+        self.assertIn(artist1, artists) # test created artist1
+        self.assertIn(artist2, artists) # test created artist2
+        self.assertNotIn(artist3, artists) # test that artist3 is not Artist instance
+        self.assertEqual(len(artists), 2) # test created 2 instance
+        self.assertEqual(artist1.name, 'Chilli Crew') # test valid data
+        self.assertEqual(artist2.name, 'Pikes') # test valid data
+        self.assertEqual(artist1.year, 2018) # test valid type
+        self.assertEqual(artist2.year, 2017) # test valid type
         self.assertEqual(str(artist1), 'Chilli Crew') #string representacion
         self.assertEqual(str(artist2), 'Pikes') #string representacion
-        self.assertEqual(str(type(artist1.thumbnail)), "<class 'django.db.models.fields.files.ImageFieldFile'>")
-        self.assertEqual(str(type(artist2.thumbnail)), "<class 'django.db.models.fields.files.ImageFieldFile'>")
+        self.assertEqual(str(type(artist1.thumbnail)), "<class 'django.db.models.fields.files.ImageFieldFile'>") # test image type
+        self.assertEqual(str(type(artist2.thumbnail)), "<class 'django.db.models.fields.files.ImageFieldFile'>") # test image type
+        self.assertEqual(artist1.thumbnail.path, f'/app/core/artist_thumbnail/Chilli_Crew_thumbnail.jpg') # test valid new file name
+
+        artist1.delete()
+        artist2.delete()
+        artists = Artist.objects.all()
+        self.assertEqual(len(artists), 0) # test delete instance
+        self.assertFalse(os.path.isfile('/app/core/artist_thumbnail/Chilli_Crew_thumbnail.jpg'))
